@@ -35,6 +35,7 @@ yo generator-angular-typescript-sass
 
 
 Yeoman will create a project with the following structure:
+
     .
     ├── app
     │   │── components

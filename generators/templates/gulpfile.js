@@ -48,6 +48,11 @@ gulp.task('copy-images', function() {
     .pipe(gulp.dest(paths.images.dest));
 });
 
+gulp.task('copy-fonts', function() {  
+  gulp.src(paths.fonts.src)
+    .pipe(gulp.dest(paths.fonts.dest));
+});
+
 gulp.task('compile:sass', function () {
   return gulp.src(paths.sass.src)
     .pipe(sourcemaps.init())
@@ -56,7 +61,7 @@ gulp.task('compile:sass', function () {
     .pipe(gulp.dest(paths.sass.dest));
 });
 
-gulp.task("default", ["copy-html", "compile:sass", "copy-images"], function () {
+gulp.task("default", ["copy-html", "compile:sass", "copy-images", "copy-fonts"], function () {
     return browserify({
         basedir: '.',
         debug: true,
@@ -69,13 +74,6 @@ gulp.task("default", ["copy-html", "compile:sass", "copy-images"], function () {
     .on('error', function (error) { console.error(error.toString()); })
     .pipe(source('bundle.js'))
     .pipe(gulp.dest(paths.dist));
-});
-
-gulp.task("watch", ["clean", "default", "serve"], function () {
-	gulp.watch(paths.tscripts.src, ["default", browserSync.reload]).on("change", reportChange);
-	gulp.watch(paths.html.views, ["copy-html", browserSync.reload]).on("change", reportChange);
-	gulp.watch(paths.sass.src, ["compile:sass", browserSync.reload]).on("change", reportChange);
-	gulp.watch(paths.images.src, ["copy-images", browserSync.reload]).on("change", reportChange);
 });
 
 gulp.task("serve", function (done) {
@@ -92,9 +90,18 @@ gulp.task("serve", function (done) {
 	}, done);
 });
 
+gulp.task("watch", ["clean", "default", "serve"], function () {
+	gulp.watch(paths.tscripts.src, ["default", browserSync.reload]).on("change", reportChange);
+	gulp.watch(paths.html.views, ["copy-html", browserSync.reload]).on("change", reportChange);
+	gulp.watch(paths.sass.src, ["compile:sass", browserSync.reload]).on("change", reportChange);
+	gulp.watch(paths.images.src, ["copy-images", browserSync.reload]).on("change", reportChange);
+	gulp.watch(paths.fonts.src, ["copy-fonts", browserSync.reload]).on("change", reportChange);
+});
+
 gulp.task("release", ["clean", "default"], function () {
 
 });
+
 
 function reportChange(event) {
 	console.log("File " + event.path + " was " + event.type);
