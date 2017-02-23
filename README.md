@@ -6,7 +6,7 @@
 
 ## Features
 
-Please see our [gulpfile](app/templates/gulpfile.js) for up to date information on what we support.
+Please see our [gulpfile](https://github.com/leonyipwh/generator-angular-typescript-sass/blob/master/generators/templates/gulpfile.js) for up to date information on what we support.
 
 * Browserify with AngualrJS v1.6.2 and Angular-ui-router v1.1.36
 * Typescript ^v2.1.6
