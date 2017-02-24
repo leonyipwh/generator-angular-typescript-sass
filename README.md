@@ -64,9 +64,9 @@ Yeoman will create a project with the following structure:
 MIT © [Leon Yip]()
 
 
-<!--[npm-image]: https://badge.fury.io/js/generator-angular-typescript-sass.svg
+[npm-image]: https://badge.fury.io/js/generator-angular-typescript-sass.svg
 [npm-url]: https://npmjs.org/package/generator-angular-typescript-sass
 [travis-image]: https://travis-ci.org/leonyipwh/generator-angular-typescript-sass.svg?branch=master
 [travis-url]: https://travis-ci.org/leonyipwh/generator-angular-typescript-sass
 [daviddm-image]: https://david-dm.org/leonyipwh/generator-angular-typescript-sass.svg?theme=shields.io
-[daviddm-url]: https://david-dm.org/leonyipwh/generator-angular-typescript-sass-->
+[daviddm-url]: https://david-dm.org/leonyipwh/generator-angular-typescript-sass
