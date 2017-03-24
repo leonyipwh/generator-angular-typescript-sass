@@ -1,6 +1,6 @@
 {
   "name": "generator-angular-typescript-sass",
-  "version": "1.0.1",
+  "version": "2.0.0",
   "description": "Seed project for angular + typescript + sass",
   "author": "Leon Yip",
   "files": [
