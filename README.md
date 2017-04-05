@@ -38,7 +38,9 @@ Yeoman will create a project with the following structure:
 
     .
     ├── app
-    │   │── components
+    │   │── _typescript
+    │   │── script
+    │   │── _sass
     │   │── styles
     │   │── fonts
     │   │── images
