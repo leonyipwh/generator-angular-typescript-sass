@@ -1,6 +1,6 @@
 {
   "name": "<%= projectName %>",
-  "version": "1.0.0",
+  "version": "3.0.0",
   "description": "",
   "main": "app.ts",
   "scripts": {
@@ -19,7 +19,8 @@
     "gulp-util": "^3.0.8",
     "tsify": "^3.0.1",
     "typescript": "^2.1.6",
-    "vinyl-source-stream": "^1.1.0"
+    "vinyl-source-stream": "^1.1.0",
+    "run-sequence": "^1.2.2"
   },
   "dependencies": {
     "@types/angular": "^1.6.5",

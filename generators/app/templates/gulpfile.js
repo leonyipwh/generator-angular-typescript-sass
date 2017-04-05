@@ -1,107 +1,118 @@
 var gulp        = require("gulp");
 var browserify  = require("browserify");
-var browserSync = require("browser-sync");
-var source      = require('vinyl-source-stream');
+var browserSync = require("browser-sync").create();
+var source      = require("vinyl-source-stream");
 var tsify       = require("tsify");
-var sass        = require('gulp-sass');
-var sourcemaps  = require('gulp-sourcemaps');
-var clean       = require('gulp-clean');
+var sass        = require("gulp-sass");
+var sourcemaps  = require("gulp-sourcemaps");
+var clean       = require("gulp-clean");
+var runSequence = require("run-sequence");
+var uglify      = require('gulp-uglify');
+
 
 var paths = {
 	tscripts: {
-		src: ["src/**/*.ts"],
-		dest: "dist"
+		src: ["src/_typescript/**/*.ts"],
+		dest: "src/script"
 	},
-	html:{
-		views: ["src/**/*.html", "index.html"],
+	html: {
+		views: ["src/views/**/*.html", "src/index.html"],
 		main: "src/index.html",
 		dest: "dist/views/**/*.html"
 	},
 	sass: {
-		src: ["src/styles/**/*.sass"],
-		dest: "./dist/styles"
+		src: ["src/_sass/**/*.sass"],
+		dest: "src/styles",
+		release: "dist/styles"
 	},
 	fonts: {
 		src: ["src/fonts/**/*.*"],
-		dest: "./dist/fonts"
+		dest: "dist/fonts"
 	},
 	images: {
 		src: ["src/images/**/*.{png,jpeg,jpg,svg}"],
-		dest: "./dist/images"
+		dest: "dist/images"
 	},
+	vendor: {
+		src: ["src/vendor/**/*.*"],
+		dest: "dist/vendor"
+	},
+	src: "src",
 	dist: "dist"
 };
 
 gulp.task("clean", function () {
-    return gulp.src(paths.dist + "/*.*",{read: false})
-        .pipe(clean());
+	return gulp.src(paths.dist, { read: false })
+		.pipe(clean());
 });
 
 
-gulp.task("copy-html", function () {
-    return gulp.src(paths.html.views)
-        .pipe(gulp.dest(paths.dist));
+gulp.task("compile:sass", function () {
+	return gulp.src(paths.sass.src)
+		.pipe(sourcemaps.init())
+		.pipe(sass({ includePaths: [paths.sass.src], errLogToConsole: true }).on("error", sass.logError))
+		.pipe(sourcemaps.write("./maps"))
+		.pipe(gulp.dest(paths.sass.dest))
+		.pipe(browserSync.stream({ match: "**/*.css" }));
 });
 
-gulp.task('copy-images', function() {  
-  gulp.src(paths.images.src)
-    .pipe(gulp.dest(paths.images.dest));
+gulp.task("bundle:ts", function (done) {
+	return browserify({
+		basedir: ".",
+		debug: true,
+		entries: ["src/_typescript/main.ts"],
+		cache: {},
+		packageCache: {}
+	})
+	.plugin(tsify)
+	.bundle()
+	.on("error", function (error) { console.error(error.toString()); })
+	.pipe(source("bundle.js"))
+	.pipe(gulp.dest(paths.tscripts.dest));
 });
 
-gulp.task('copy-fonts', function() {  
-  gulp.src(paths.fonts.src)
-    .pipe(gulp.dest(paths.fonts.dest));
+gulp.task("compress:js", function () {
+	return gulp.src(paths.tscripts.dest + "/*.js")
+			.pipe(sourcemaps.init({ loadMaps: true }))
+			.pipe(uglify({ mangle: false }))
+			.pipe(sourcemaps.write("./maps"))
+			.pipe(gulp.dest(paths.tscripts.dest))
 });
 
-gulp.task('compile:sass', function () {
-  return gulp.src(paths.sass.src)
-    .pipe(sourcemaps.init())
-    .pipe(sass().on('error', sass.logError))
-    .pipe(sourcemaps.write('./maps'))
-    .pipe(gulp.dest(paths.sass.dest));
+gulp.task("compile:js", function () {
+	runSequence("bundle:ts", "compress:js")
 });
 
-gulp.task("default", ["copy-html", "compile:sass", "copy-images", "copy-fonts"], function () {
-    return browserify({
-        basedir: '.',
-        debug: true,
-        entries: ['src/main.ts'],
-        cache: {},
-        packageCache: {}
-    })
-    .plugin(tsify)
-    .bundle()
-    .on('error', function (error) { console.error(error.toString()); })
-    .pipe(source('bundle.js'))
-    .pipe(gulp.dest(paths.dist));
-});
+gulp.task("default", ["compile:sass", "compile:js"], function () { });
 
-gulp.task("serve", function (done) {
-	browserSync({
+gulp.task("watch", ["default"], function () {
+
+	browserSync.init({
 		open: false,
-		port: 9000,
-		server: {
-			baseDir: [paths.dist],
-			middleware: function (req, res, next) {
-				res.setHeader("Access-Control-Allow-Origin", "*");
-				next();
-			}
-		}
-	}, done);
-});
+		port: 8000,
+		files: ["!**/*.maps.css"],
+		server: [paths.src]
+	});
 
-gulp.task("watch", ["clean", "default", "serve"], function () {
-	gulp.watch(paths.tscripts.src, ["default", browserSync.reload]).on("change", reportChange);
-	gulp.watch(paths.html.views, ["copy-html", browserSync.reload]).on("change", reportChange);
-	gulp.watch(paths.sass.src, ["compile:sass", browserSync.reload]).on("change", reportChange);
-	gulp.watch(paths.images.src, ["copy-images", browserSync.reload]).on("change", reportChange);
-	gulp.watch(paths.fonts.src, ["copy-fonts", browserSync.reload]).on("change", reportChange);
+	gulp.watch(paths.tscripts.src, ["compile:js", browserSync.reload]).on("change", reportChange);
+	gulp.watch(paths.html.views).on("change", browserSync.reload);
+	gulp.watch(paths.sass.src, ["compile:sass"]).on("change", reportChange);
+	gulp.watch(paths.images.src).on("change", browserSync.reload);
+	gulp.watch(paths.fonts.src).on("change", browserSync.reload);
+	gulp.watch(paths.vendor.src).on("change", browserSync.reload);
 });
 
 gulp.task("release", ["clean", "default"], function () {
-
+	return gulp.src([
+		"!src/_sass",
+		"!src/_sass/**",
+		"!src/_typescript",
+		"!src/_typescript/**",
+		"src/**/*"
+	])
+		.pipe(gulp.dest(paths.dist))
+		.on("error", function (error) { console.error(error.toString()); })
 });
-
 
 function reportChange(event) {
 	console.log("File " + event.path + " was " + event.type);
