@@ -15,7 +15,7 @@ var paths = {
 		src: ["src/_typescript/**/*.ts"],
 		dest: "src/script"
 	},
-	html: {
+	html:{
 		views: ["src/views/**/*.html", "src/index.html"],
 		main: "src/index.html",
 		dest: "dist/views/**/*.html"
@@ -42,17 +42,17 @@ var paths = {
 };
 
 gulp.task("clean", function () {
-	return gulp.src(paths.dist, { read: false })
-		.pipe(clean());
+  return gulp.src(paths.dist,{read: false})
+  	.pipe(clean());
 });
 
 
 gulp.task("compile:sass", function () {
-	return gulp.src(paths.sass.src)
-		.pipe(sourcemaps.init())
+  return gulp.src(paths.sass.src)
+    .pipe(sourcemaps.init())
 		.pipe(sass({ includePaths: [paths.sass.src], errLogToConsole: true }).on("error", sass.logError))
-		.pipe(sourcemaps.write("./maps"))
-		.pipe(gulp.dest(paths.sass.dest))
+    .pipe(sourcemaps.write("./maps"))
+    .pipe(gulp.dest(paths.sass.dest))
 		.pipe(browserSync.stream({ match: "**/*.css" }));
 });
 
@@ -64,33 +64,33 @@ gulp.task("bundle:ts", function (done) {
 		cache: {},
 		packageCache: {}
 	})
-	.plugin(tsify)
-	.bundle()
-	.on("error", function (error) { console.error(error.toString()); })
-	.pipe(source("bundle.js"))
-	.pipe(gulp.dest(paths.tscripts.dest));
+		.plugin(tsify)
+		.bundle()
+		.on("error", function (error) { console.error(error.toString()); })
+		.pipe(source("bundle.js"))
+		.pipe(gulp.dest(paths.tscripts.dest));
 });
 
 gulp.task("compress:js", function () {
 	return gulp.src(paths.tscripts.dest + "/*.js")
-			.pipe(sourcemaps.init({ loadMaps: true }))
-			.pipe(uglify({ mangle: false }))
-			.pipe(sourcemaps.write("./maps"))
-			.pipe(gulp.dest(paths.tscripts.dest))
+		.pipe(sourcemaps.init({loadMaps: true}))
+		.pipe(uglify({mangle: false}))
+		.pipe(sourcemaps.write("./maps"))
+		.pipe(gulp.dest(paths.tscripts.dest))
 });
 
 gulp.task("compile:js", function () {
 	runSequence("bundle:ts", "compress:js")
 });
 
-gulp.task("default", ["compile:sass", "compile:js"], function () { });
+gulp.task("default", ["compile:sass", "compile:js"], function(){});
 
 gulp.task("watch", ["default"], function () {
 
 	browserSync.init({
 		open: false,
 		port: 8000,
-		files: ["!**/*.maps.css"],
+		files: ["!**/*.maps.css", "!**/*.css"],
 		server: [paths.src]
 	});
 
@@ -102,7 +102,7 @@ gulp.task("watch", ["default"], function () {
 	gulp.watch(paths.vendor.src).on("change", browserSync.reload);
 });
 
-gulp.task("release", ["clean", "default"], function () {
+gulp.task("copy", function () {
 	return gulp.src([
 		"!src/_sass",
 		"!src/_sass/**",
@@ -112,6 +112,10 @@ gulp.task("release", ["clean", "default"], function () {
 	])
 		.pipe(gulp.dest(paths.dist))
 		.on("error", function (error) { console.error(error.toString()); })
+})
+
+gulp.task("release", function () {
+	runSequence("clean", "compile:sass", "bundle:ts", "compress:js", "copy");
 });
 
 function reportChange(event) {
