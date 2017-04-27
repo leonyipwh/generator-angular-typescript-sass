@@ -8,6 +8,7 @@ var sourcemaps  = require("gulp-sourcemaps");
 var clean       = require("gulp-clean");
 var runSequence = require("run-sequence");
 var uglify      = require('gulp-uglify');
+var buffer      = require('vinyl-buffer');
 
 
 var paths = {
@@ -46,11 +47,10 @@ gulp.task("clean", function () {
   	.pipe(clean());
 });
 
-
 gulp.task("compile:sass", function () {
   return gulp.src(paths.sass.src)
     .pipe(sourcemaps.init())
-		.pipe(sass({ includePaths: [paths.sass.src], errLogToConsole: true }).on("error", sass.logError))
+		.pipe(sass({ outputStyle: 'compressed', includePaths: [paths.sass.src]}).on("error", sass.logError))
     .pipe(sourcemaps.write("./maps"))
     .pipe(gulp.dest(paths.sass.dest))
 		.pipe(browserSync.stream({ match: "**/*.css" }));
@@ -67,23 +67,15 @@ gulp.task("bundle:ts", function (done) {
 		.plugin(tsify)
 		.bundle()
 		.on("error", function (error) { console.error(error.toString()); })
-		.pipe(source("bundle.js"))
+		.pipe(source('bundle.js'))
+		.pipe(buffer())
+		.pipe(sourcemaps.init({ loadMaps: true }))
+		.pipe(uglify({ mangle: false }))
+		.pipe(sourcemaps.write('./'))
 		.pipe(gulp.dest(paths.tscripts.dest));
 });
 
-gulp.task("compress:js", function () {
-	return gulp.src(paths.tscripts.dest + "/*.js")
-		.pipe(sourcemaps.init({loadMaps: true}))
-		.pipe(uglify({mangle: false}))
-		.pipe(sourcemaps.write("./maps"))
-		.pipe(gulp.dest(paths.tscripts.dest))
-});
-
-gulp.task("compile:js", function () {
-	runSequence("bundle:ts", "compress:js")
-});
-
-gulp.task("default", ["compile:sass", "compile:js"], function(){});
+gulp.task("default", ["compile:sass", "bundle:ts"], function(){});
 
 gulp.task("watch", ["default"], function () {
 
@@ -94,7 +86,7 @@ gulp.task("watch", ["default"], function () {
 		server: [paths.src]
 	});
 
-	gulp.watch(paths.tscripts.src, ["compile:js", browserSync.reload]).on("change", reportChange);
+	gulp.watch(paths.tscripts.src, ["bundle:ts", browserSync.reload]).on("change", reportChange);
 	gulp.watch(paths.html.views).on("change", browserSync.reload);
 	gulp.watch(paths.sass.src, ["compile:sass"]).on("change", reportChange);
 	gulp.watch(paths.images.src).on("change", browserSync.reload);
@@ -115,7 +107,7 @@ gulp.task("copy", function () {
 })
 
 gulp.task("release", function () {
-	runSequence("clean", "compile:sass", "bundle:ts", "compress:js", "copy");
+	runSequence("clean", "compile:sass", "bundle:ts", "copy");
 });
 
 function reportChange(event) {
