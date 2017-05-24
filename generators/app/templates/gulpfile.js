@@ -66,7 +66,10 @@ gulp.task("bundle:ts", function (done) {
 	})
 		.plugin(tsify)
 		.bundle()
-		.on("error", function (error) { console.error(error.toString()); })
+		.on("error", function (error) { 
+			console.error(error.toString()); 
+			this.emit('end');
+		})
 		.pipe(source('bundle.js'))
 		.pipe(buffer())
 		.pipe(sourcemaps.init({ loadMaps: true }))
@@ -107,7 +110,7 @@ gulp.task("copy", function () {
 })
 
 gulp.task("release", function () {
-	runSequence("clean", "compile:sass", "bundle:ts", "copy");
+	runSequence("clean", "default", "copy");
 });
 
 function reportChange(event) {
