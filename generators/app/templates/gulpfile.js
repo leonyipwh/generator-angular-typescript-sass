@@ -10,7 +10,6 @@ var runSequence = require("run-sequence");
 var uglify      = require('gulp-uglify');
 var buffer      = require('vinyl-buffer');
 
-
 var paths = {
 	tscripts: {
 		src: ["src/_typescript/**/*.ts"],
@@ -89,12 +88,17 @@ gulp.task("watch", ["default"], function () {
 		server: [paths.src]
 	});
 
-	gulp.watch(paths.tscripts.src, ["bundle:ts", browserSync.reload]).on("change", reportChange);
+	gulp.watch(paths.tscripts.src, ["ts-watch"]);
 	gulp.watch(paths.html.views).on("change", browserSync.reload);
 	gulp.watch(paths.sass.src, ["compile:sass"]).on("change", reportChange);
 	gulp.watch(paths.images.src).on("change", browserSync.reload);
 	gulp.watch(paths.fonts.src).on("change", browserSync.reload);
 	gulp.watch(paths.vendor.src).on("change", browserSync.reload);
+});
+
+gulp.task("ts-watch", ["bundle:ts"], function (done) {
+    browserSync.reload();
+    done();
 });
 
 gulp.task("copy", function () {
